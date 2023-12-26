@@ -1,0 +1,11 @@
+:root {
+  --color: #4F6F52;
+  --secondary-color: #739072;
+  --light-color: #D2E3C8;
+
+  --disable-background-color-text: #ffffff;
+  --disable-color-text: #bdbdbd;
+  --disable-background-color-container: #e0e0e0;
+  --disable-color-text-container: #aeaeae;
+  --background-color-button: #ffffff;
+}
