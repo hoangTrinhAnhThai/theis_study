@@ -1,39 +1,81 @@
-import { css, keyframes } from "@emotion/react"
-import "@/styles/properties.css";
-import { ChevronRightIcon } from "@heroicons/react/16/solid";
-import { useState } from "react";
-import { useGetContents } from "@/features/Content/api/getContents";
+import '@/styles/properties.css';
+import { css, keyframes } from '@emotion/react';
+import {
+  ChevronRightIcon,
+  PencilSquareIcon,
+  PlusIcon,
+} from '@heroicons/react/16/solid';
+import { useEffect, useState } from 'react';
+import { useGetContents } from '@/features/Content/api/getContents';
+import { Text } from '@/components/Text';
+import { Button } from '@/components/Button/Button';
+import { useContentStore } from '@/stores/contentStore';
 
 export const LeftSidebar = () => {
-  const {data} = useGetContents();
+  const { data } = useGetContents();
   const [menuState, setMenuState] = useState(Array(data?.length).fill(false));
+  const { changeContent } = useContentStore();
 
-  const toggleMenu = (index: number) => {
+  useEffect(() => {
+    if (data) {
+      changeContent(data[0].content ?? '');
+    }
+  }, [data]);
+
+  const toggleMenu = (index: number, content?: string) => {
     const newMenuState = [...menuState];
     newMenuState[index] = !newMenuState[index];
     setMenuState(newMenuState);
-  }
+    if (content) {
+      changeContent(content);
+    }
+  };
+
+  const handleAddClick = () => {};
   return (
     <div css={leftSidebarContainer}>
-      { data && data.map((content, index) => (
-        <section css={sectionStyle}>
-          <div css={titleStyle(menuState[index])} onClick={() => toggleMenu(index)}>
-            <text>{content.title}</text>
-            <ChevronRightIcon width={28} css={[iconStyle, menuState[index] && animationIcon]}/>
-          </div>
-            { content.items && (
-              <ul css={[listStyle, menuState[index]? listOpen : listClose]} >
-                {content.items.map((item, itemIndex) => (
-                  <li css={listItem} key={itemIndex}>{item.title}</li>
-                  )
-                )}
+      {data &&
+        data.map((list, index) => (
+          <section css={sectionStyle}>
+            <div
+              css={titleStyle(menuState[index])}
+              onClick={() => toggleMenu(index, list.content)}
+            >
+              <text>{list.title}</text>
+              {list.items.length > 0 && (
+                <ChevronRightIcon
+                  width={28}
+                  css={[arrowIconStyle, menuState[index] && animationIcon]}
+                />
+              )}
+            </div>
+            {list.items.length > 0 && (
+              <ul css={[listStyle, menuState[index] ? listOpen : listClose]}>
+                {list.items.map((item, itemIndex) => (
+                  <li
+                    css={listItem}
+                    key={itemIndex}
+                    onClick={() => changeContent(item.content)}
+                  >
+                    {item.title}
+                  </li>
+                ))}
               </ul>
             )}
-        </section>
-      ))}
+          </section>
+        ))}
+      <div css={updateList}>
+        <Text placeHolder="Add content..." />
+        <Button onClick={handleAddClick}>
+          <PlusIcon width={24} css={iconStyle} />
+        </Button>
+        <Button onClick={handleAddClick}>
+          <PencilSquareIcon width={24} css={iconStyle} />
+        </Button>
+      </div>
     </div>
-  )
-}
+  );
+};
 
 const iconAnimationOpen = keyframes`
   from {
@@ -54,9 +96,29 @@ const iconAnimationClose = keyframes`
 `;
 
 const leftSidebarContainer = css`
-  margin: 50px;
-  width: 200px;
+  width: 15rem;
   text-transform: capitalize;
+  border-right: 1px solid var(--light-color);
+  padding: 10px;
+  height: calc(100vh - 20px);
+  overflow-y: auto;
+
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: var(--light-color);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--secondary-color);
+    border-radius: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color);
+  }
 `;
 
 const sectionStyle = css`
@@ -66,7 +128,7 @@ const sectionStyle = css`
 const titleStyle = (isOpen: boolean) => css`
   display: flex;
   justify-content: space-between;
-  padding: 3px 10px 0;
+  padding: 5px;
   border-radius: 3px;
   ${isOpen && 'color: yellow !important'}
   &:hover {
@@ -75,35 +137,38 @@ const titleStyle = (isOpen: boolean) => css`
   }
 `;
 const iconStyle = css`
+  padding: 0;
+`;
+
+const arrowIconStyle = css`
   animation: ${iconAnimationClose} 0.5s ease-in-out;
 `;
 
 const animationIcon = css`
   animation: ${iconAnimationOpen} 0.5s ease-in-out;
   transform: rotate(90deg);
-`
+`;
 
 const listOpen = css`
   height: 100%;
-  visibility: visible;
-  transition: height 5s ease-in-out 0s;
-`
+  display: block;
+`;
 
 const listClose = css`
   height: 0;
-  visibility: hidden;
-  transition: height 5s ease-in-out 0s;
-`
+  display: none;
+`;
 
 const listStyle = css`
   list-style: none;
-  margin: 5px;
-  padding: 0 5px;
-  transition: height 0.5s;
+  margin: 0px;
+  padding: 0px;
+  will-change: height;
+  transition: height 644ms ease-in-out 0s;
 `;
 
 const listItem = css`
-  padding: 3px 10px;
+  padding: 5px 0 5px 20px;
   border-radius: 3px;
   transition: background-color 0.25s;
   &:hover {
@@ -111,4 +176,7 @@ const listItem = css`
   }
 `;
 
-
+const updateList = css`
+  margin: 10px 0;
+  width: 100%;
+`;
